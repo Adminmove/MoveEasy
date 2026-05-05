@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoveEasy — Engineering Review</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0e0e0e;
+    --paper: #f5f0e8;
+    --cream: #ede7d6;
+    --accent: #c8442e;
+    --accent-dark: #9c3222;
+    --gold: #c49a2a;
+    --green: #2a6e47;
+    --amber: #c47a1e;
+    --rule: #ccc4b4;
+    --mono: 'JetBrains Mono', monospace;
+    --serif: 'Lora', serif;
+    --display: 'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  /* ─── MASTHEAD ─── */
+  .masthead {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 3rem 4rem 2.5rem;
+    border-bottom: 4px solid var(--accent);
+    position: relative;
+    overflow: hidden;
+  }
+  .masthead::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 60px,
+      rgba(255,255,255,0.02) 60px,
+      rgba(255,255,255,0.02) 61px
+    );
+    pointer-events: none;
+  }
+  .masthead-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .masthead h1 {
+    font-family: var(--display);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+  .masthead h1 span { color: var(--gold); }
+  .masthead-sub {
+    font-family: var(--display);
+    font-size: 1rem;
+    font-weight: 400;
+    color: rgba(245,240,232,0.65);
+    margin-bottom: 2rem;
+  }
+  .masthead-meta {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 1.5rem;
+  }
+  .masthead-meta-item {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: rgba(245,240,232,0.5);
+  }
+  .masthead-meta-item strong {
+    display: block;
+    color: var(--paper);
+    font-size: 0.8rem;
+    margin-bottom: 0.15rem;
+  }
+
+  /* ─── LAYOUT ─── */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 0;
+    min-height: 100vh;
+  }
+
+  /* ─── SIDEBAR TOC ─── */
+  .sidebar {
+    background: var(--cream);
+    border-right: 1px solid var(--rule);
+    padding: 2.5rem 1.5rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .sidebar-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+  }
+  .toc-section {
+    margin-bottom: 1.5rem;
+  }
+  .toc-section-title {
+    font-family: var(--display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(14,14,14,0.4);
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .toc a {
+    display: block;
+    font-family: var(--display);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 0.2rem 0;
+    transition: color 0.15s;
+    line-height: 1.4;
+  }
+  .toc a:hover { color: var(--accent); }
+  .toc a.critical { color: var(--accent); font-weight: 600; }
+  .toc-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 50%;
+    font-size: 0.6rem;
+    font-family: var(--mono);
+    font-weight: 600;
+    margin-left: 0.4rem;
+    vertical-align: middle;
+  }
+  .count-red { background: var(--accent); color: white; }
+  .count-amber { background: var(--amber); color: white; }
+  .count-green { background: var(--green); color: white; }
+
+  /* ─── MAIN CONTENT ─── */
+  .main {
+    padding: 3rem 3.5rem;
+  }
+
+  /* ─── SECTION ─── */
+  .section {
+    margin-bottom: 4rem;
+    padding-bottom: 4rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .section:last-child { border-bottom: none; }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .section-number {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    flex-shrink: 0;
+  }
+  h2 {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  h3 {
+    font-family: var(--display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  h4 {
+    font-family: var(--display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: rgba(14,14,14,0.55);
+  }
+  p { margin-bottom: 1rem; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ─── FINDINGS CARDS ─── */
+  .finding {
+    border-left: 3px solid var(--rule);
+    margin: 1.5rem 0;
+    padding: 1.25rem 1.5rem;
+    background: rgba(255,255,255,0.5);
+    border-radius: 0 6px 6px 0;
+    position: relative;
+  }
+  .finding.critical {
+    border-left-color: var(--accent);
+    background: rgba(200,68,46,0.04);
+  }
+  .finding.warning {
+    border-left-color: var(--amber);
+    background: rgba(196,122,30,0.04);
+  }
+  .finding.info {
+    border-left-color: var(--gold);
+    background: rgba(196,154,42,0.04);
+  }
+  .finding.good {
+    border-left-color: var(--green);
+    background: rgba(42,110,71,0.04);
+  }
+  .finding-badge {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+    border-radius: 2px;
+    margin-bottom: 0.6rem;
+    display: inline-block;
+  }
+  .badge-critical { background: var(--accent); color: white; }
+  .badge-warning { background: var(--amber); color: white; }
+  .badge-info { background: var(--gold); color: white; }
+  .badge-good { background: var(--green); color: white; }
+
+  .finding-title {
+    font-family: var(--display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .finding p { font-size: 0.9rem; margin-bottom: 0.6rem; }
+  .finding p:last-child { margin-bottom: 0; }
+  .finding-file {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: rgba(14,14,14,0.45);
+    margin-top: 0.5rem;
+  }
+
+  /* ─── CODE ─── */
+  pre {
+    background: #1a1a1a;
+    color: #e8e0d0;
+    padding: 1.25rem 1.5rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    line-height: 1.6;
+    margin: 1rem 0;
+    border-left: 3px solid var(--accent);
+  }
+  pre.good { border-left-color: var(--green); }
+  pre.bad { border-left-color: var(--accent); }
+  code {
+    font-family: var(--mono);
+    font-size: 0.82em;
+    background: rgba(14,14,14,0.07);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  /* ─── TABLES ─── */
+  .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  thead th {
+    font-family: var(--display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.6rem 1rem;
+    background: var(--ink);
+    color: var(--paper);
+    text-align: left;
+    white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--rule); }
+  tbody tr:hover { background: rgba(0,0,0,0.02); }
+  tbody td { padding: 0.65rem 1rem; vertical-align: top; line-height: 1.5; }
+  tbody td:first-child { font-family: var(--mono); font-size: 0.78rem; font-weight: 500; }
+
+  /* ─── SCORECARD ─── */
+  .scorecard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 2rem 0;
+  }
+  .score-cell {
+    background: var(--paper);
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+  }
+  .score-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(14,14,14,0.5);
+    margin-bottom: 0.5rem;
+  }
+  .score-value {
+    font-family: var(--display);
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .score-sub {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: rgba(14,14,14,0.4);
+    margin-top: 0.3rem;
+  }
+  .score-red { color: var(--accent); }
+  .score-amber { color: var(--amber); }
+  .score-green { color: var(--green); }
+  .score-gold { color: var(--gold); }
+
+  /* ─── STATUS PILL ─── */
+  .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.55rem;
+    border-radius: 100px;
+  }
+  .pill-red { background: rgba(200,68,46,0.12); color: var(--accent-dark); }
+  .pill-amber { background: rgba(196,122,30,0.12); color: #8a5510; }
+  .pill-green { background: rgba(42,110,71,0.12); color: var(--green); }
+  .pill-blue { background: rgba(30,80,180,0.1); color: #1a4fa0; }
+
+  /* ─── CALLOUT ─── */
+  .callout {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 1.5rem 2rem;
+    border-radius: 4px;
+    margin: 2rem 0;
+  }
+  .callout-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.75rem;
+  }
+  .callout h3 {
+    font-family: var(--display);
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    margin-top: 0;
+    padding-bottom: 0;
+    color: var(--paper);
+  }
+  .callout p { font-size: 0.88rem; color: rgba(245,240,232,0.8); margin-bottom: 0.5rem; }
+
+  /* ─── CHECKLIST ─── */
+  .checklist { list-style: none; margin: 0.75rem 0; }
+  .checklist li {
+    padding: 0.3rem 0 0.3rem 1.75rem;
+    position: relative;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(14,14,14,0.05);
+  }
+  .checklist li::before {
+    position: absolute;
+    left: 0;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    top: 0.4rem;
+  }
+  .check-pass::before { content: '✓'; color: var(--green); }
+  .check-fail::before { content: '✗'; color: var(--accent); }
+  .check-warn::before { content: '!'; color: var(--amber); }
+  .check-na::before { content: '–'; color: rgba(14,14,14,0.3); }
+
+  /* ─── PRIORITY GRID ─── */
+  .priority-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  .priority-block {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .priority-header {
+    padding: 0.6rem 1rem;
+    font-family: var(--display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .ph-red { background: var(--accent); color: white; }
+  .ph-amber { background: var(--amber); color: white; }
+  .ph-gold { background: var(--gold); color: white; }
+  .ph-green { background: var(--green); color: white; }
+  .priority-items { padding: 0.75rem 1rem; }
+  .priority-items li {
+    font-size: 0.83rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid rgba(14,14,14,0.06);
+    line-height: 1.4;
+  }
+  .priority-items li:last-child { border-bottom: none; }
+
+  /* ─── PRINT ─── */
+  @media print {
+    .sidebar { display: none; }
+    .two-col { display: block; }
+    .main { padding: 1.5rem; }
+    pre { page-break-inside: avoid; }
+    .finding { page-break-inside: avoid; }
+  }
+
+  @media (max-width: 900px) {
+    .two-col { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { padding: 2rem 1.5rem; }
+    .masthead { padding: 2rem 1.5rem; }
+    .priority-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-label">Engineering Code Review · Confidential</div>
+  <h1>MoveEasy <span>Full Build</span><br>Engineering Review</h1>
+  <p class="masthead-sub">AI-Powered South African Fintech Platform — v2026.1.0</p>
+  <div class="masthead-meta">
+    <div class="masthead-meta-item"><strong>Reviewed</strong>April 2026</div>
+    <div class="masthead-meta-item"><strong>Codebase</strong>moveeasy-full-build.zip</div>
+    <div class="masthead-meta-item"><strong>Stack</strong>Node/Express · Hono · BullMQ · PostgreSQL · Claude API</div>
+    <div class="masthead-meta-item"><strong>Region</strong>AWS af-south-1 (Cape Town)</div>
+    <div class="masthead-meta-item"><strong>Agreements</strong>Nedbank + Softy Comp / Purple Owl</div>
+    <div class="masthead-meta-item"><strong>Products</strong>5 (EasyTransect, EasyFuel, FuelFlex, SafeBet, GreenWallet, MMP.ai)</div>
+  </div>
+</header>
+
+<div class="two-col">
+
+  <nav class="sidebar">
+    <div class="sidebar-label">Contents</div>
+    <div class="toc-section">
+      <div class="toc-section-title">Overview</div>
+      <nav class="toc">
+        <a href="#scorecard">Scorecard</a>
+        <a href="#executive">Executive Summary</a>
+        <a href="#architecture">Architecture Assessment</a>
+      </nav>
+    </div>
+    <div class="toc-section">
+      <div class="toc-section-title">Critical Findings</div>
+      <nav class="toc">
+        <a href="#security" class="critical">Security <span class="toc-count count-red">4</span></a>
+        <a href="#financial" class="critical">Financial Logic <span class="toc-count count-red">3</span></a>
+        <a href="#compliance" class="critical">Compliance <span class="toc-count count-amber">4</span></a>
+      </nav>
+    </div>
+    <div class="toc-section">
+      <div class="toc-section-title">Domain Review</div>
+      <nav class="toc">
+        <a href="#ai-brain">AI Brain / Orchestrator</a>
+        <a href="#payment-rails">Payment Rails</a>
+        <a href="#easyfuel">EasyFuel + FuelFlex</a>
+        <a href="#safebet">SafeBet</a>
+        <a href="#workers">Async Workers</a>
+        <a href="#database">Database / Schema</a>
+        <a href="#infra">Infrastructure</a>
+      </nav>
+    </div>
+    <div class="toc-section">
+      <div class="toc-section-title">Recommendations</div>
+      <nav class="toc">
+        <a href="#priorities">Prioritised Actions</a>
+        <a href="#env">Environment / Config</a>
+        <a href="#missing">Missing Pieces</a>
+      </nav>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- SCORECARD -->
+    <section class="section" id="scorecard">
+      <div class="section-header">
+        <span class="section-number">00</span>
+        <h2>Scorecard</h2>
+      </div>
+      <div class="scorecard">
+        <div class="score-cell">
+          <div class="score-label">Overall Readiness</div>
+          <div class="score-value score-amber">62<span style="font-size:1rem;font-weight:400">/100</span></div>
+          <div class="score-sub">Pre-production</div>
+        </div>
+        <div class="score-cell">
+          <div class="score-label">Security</div>
+          <div class="score-value score-amber">58<span style="font-size:1rem;font-weight:400">/100</span></div>
+          <div class="score-sub">4 criticals open</div>
+        </div>
+        <div class="score-cell">
+          <div class="score-label">Financial Logic</div>
+          <div class="score-value score-amber">71<span style="font-size:1rem;font-weight:400">/100</span></div>
+          <div class="score-sub">3 bugs found</div>
+        </div>
+        <div class="score-cell">
+          <div class="score-label">Compliance (FICA/AML)</div>
+          <div class="score-value score-amber">65<span style="font-size:1rem;font-weight:400">/100</span></div>
+          <div class="score-sub">Gaps identified</div>
+        </div>
+        <div class="score-cell">
+          <div class="score-label">Architecture</div>
+          <div class="score-value score-green">82<span style="font-size:1rem;font-weight:400">/100</span></div>
+          <div class="score-sub">Solid foundation</div>
+        </div>
+        <div class="score-cell">
+          <div class="score-label">AI Brain</div>
+          <div class="score-value score-green">78<span style="font-size:1rem;font-weight:400">/100</span></div>
+          <div class="score-sub">Well-structured</div>
+        </div>
+      </div>
+      <p style="font-size:0.85rem;color:rgba(14,14,14,0.55)">Scores reflect production-readiness across each dimension. 4 critical security issues must be resolved before any live payment processing.</p>
+    </section>
+
+    <!-- EXECUTIVE SUMMARY -->
+    <section class="section" id="executive">
+      <div class="section-header">
+        <span class="section-number">01</span>
+        <h2>Executive Summary</h2>
+      </div>
+
+      <p>MoveEasy is a well-conceived and technically ambitious platform. The shared infrastructure model — single KYC, unified wallet, central AI brain — is the right architectural bet for a multi-product fintech. The codebase shows genuine engineering effort: async-first payment processing via BullMQ, HMAC-signed vouchers with geo-lock validation, proper ACID transactions, and a Claude-powered orchestrator that is meaningfully integrated (not bolted on).</p>
+
+      <p>However, <strong>the build is not production-safe in its current state</strong>. Four security issues are critical blockers for live payment processing. The most severe is the absence of Ozow webhook signature verification, which would allow an attacker to fraudulently confirm EFT payments without ever sending money. Three financial logic bugs would result in real monetary losses under normal usage. Several FICA/AML compliance gaps need closing before FSCA scrutiny.</p>
+
+      <div class="callout">
+        <div class="callout-label">Verdict</div>
+        <h3>Strong foundation — fix security and financial bugs before going live</h3>
+        <p>The core architecture patterns are correct and deployable. The 4 critical items below are straightforward fixes. Resolve those, address the 3 financial logic bugs, and this platform can proceed to controlled launch.</p>
+      </div>
+
+      <h3>What's Working Well</h3>
+      <ul class="checklist">
+        <li class="check-pass">Async-first payment processing — BullMQ workers handle all fund movements, HTTP requests never touch money directly</li>
+        <li class="check-pass">ACID transactions with <code>withTransaction()</code> wrapper used consistently across financial operations</li>
+        <li class="check-pass">HMAC-signed fuel vouchers with proper 4-hour TTL expiry</li>
+        <li class="check-pass">Geo-lock enforcement using Haversine distance (500m radius) — correct mathematical implementation</li>
+        <li class="check-pass">KYC gate (<code>requireKYC()</code> middleware) applied before all sensitive routes with tier-level granularity</li>
+        <li class="check-pass">Idempotency key handling on SafeBet deposits prevents duplicate processing</li>
+        <li class="check-pass">AI Brain properly scoped — multi-turn context, structured JSON outputs, financial health narratives</li>
+        <li class="check-pass">Database schema: BIGINT cents throughout, no floating-point money</li>
+        <li class="check-pass">Nginx config: TLS 1.2/1.3 only, HSTS, security headers, rate limiting per route</li>
+        <li class="check-pass">PCI-DSS: no raw card data stored — tokenisation delegated to gateways</li>
+        <li class="check-pass">Compliance flags table and AML pattern detection defined in Brain orchestrator</li>
+      </ul>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section class="section" id="architecture">
+      <div class="section-header">
+        <span class="section-number">02</span>
+        <h2>Architecture Assessment</h2>
+      </div>
+
+      <p>The overall architecture is sound. The dual-layer API design (Hono at edge on Cloudflare Workers + Express on EC2) is a sensible pattern for latency-sensitive auth/routing separated from business logic. The shared infrastructure model correctly treats KYC, wallet, and payment rails as platform primitives that all products consume.</p>
+
+      <div class="finding good">
+        <span class="finding-badge badge-good">Good</span>
+        <div class="finding-title">Async Payment Doctrine</div>
+        <p>The codebase consistently follows the <em>"payments MUST be async"</em> doctrine. HTTP handlers create records and queue jobs; all fund movements happen in BullMQ workers with retry logic (<code>attempts: 3, backoff: exponential</code>). This is correct for a fintech platform and prevents partial-state failures from network timeouts.</p>
+        <div class="finding-file">worker.js · safebet.js · webhooks.js</div>
+      </div>
+
+      <div class="finding warning">
+        <span class="finding-badge badge-warning">Warning</span>
+        <div class="finding-title">Dual Codebase: Express vs Hono — Sync Not Enforced</div>
+        <p>The zip contains two parallel API implementations: a Node/Express backend (<code>backend/src/</code>) and a Hono/TypeScript layer (<code>core/api.ts</code>). These implement overlapping routes with different patterns. It's unclear which is deployed. This dual-codebase situation creates divergence risk — bugs fixed in one may not be applied to the other. Designate one canonical API layer and remove or clearly stub the other.</p>
+        <div class="finding-file">core/api.ts vs backend/src/index.js</div>
+      </div>
+
+      <div class="finding info">
+        <span class="finding-badge badge-info">Note</span>
+        <div class="finding-title">Redis is a Single Point of Failure</div>
+        <p>BullMQ jobs are the only write-ahead log for payment processing. Redis runs on <code>localhost:6379</code> with no persistence configuration shown (<code>appendonly yes</code> / RDB snapshots). If Redis restarts without persistence, all queued payment jobs are lost. Enable Redis persistence or use ElastiCache with backup.</p>
+        <div class="finding-file">workers.ts · worker.js · .env.example</div>
+      </div>
+
+      <h3>Inconsistencies Between Layers</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Route / Feature</th><th>Express Layer</th><th>Hono Layer</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td>/api/safebet/deposit</td><td>Full impl, Ozow URL</td><td>Basic stub</td><td><span class="pill pill-amber">Diverged</span></td></tr>
+            <tr><td>/api/easyfuel/vouchers/unlock</td><td>Geo-lock + QR</td><td>Partial</td><td><span class="pill pill-amber">Diverged</span></td></tr>
+            <tr><td>/api/brain/analyse</td><td>Via orchestrator.js</td><td>brain.ts class</td><td><span class="pill pill-amber">Diverged</span></td></tr>
+            <tr><td>/webhooks/ozow</td><td>Implemented</td><td>Not present</td><td><span class="pill pill-red">Gap</span></td></tr>
+            <tr><td>Auth / KYC middleware</td><td>Consistent</td><td>Consistent</td><td><span class="pill pill-green">OK</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECURITY -->
+    <section class="section" id="security">
+      <div class="section-header">
+        <span class="section-number">03</span>
+        <h2>Security — Critical Findings</h2>
+      </div>
+
+      <div class="finding critical">
+        <span class="finding-badge badge-critical">Critical — SEC-01</span>
+        <div class="finding-title">Ozow Webhook Has No Signature Verification</div>
+        <p>The Ozow webhook handler processes payment confirmations and queues VALR conversions without verifying the request is genuinely from Ozow. Any actor with knowledge of the endpoint URL can POST a fake <code>Status: Complete</code> payload and trigger USDC conversion for a batch they never paid for.</p>
+        <p>Ozow signs webhooks with a SHA-512 hash (combining SiteCode, Amount, TransactionReference, and PrivateKey). This must be verified before processing any status update.</p>
+<pre class="bad">// Current — VULNERABLE
+router.post('/ozow', async (req, res) => {
+  const { Status, TransactionReference, Amount, HashCheck } = req.body;
+  res.status(200).send('OK');
+  if (Status !== 'Complete') return;
+  // ... queues VALR conversion — no auth check!</pre>
+
+<pre class="good">// Fix — Verify Ozow hash before processing
+const crypto = require('crypto');
+function verifyOzowHash(body) {
+  const { SiteCode, Amount, Status, TransactionReference,
+          IsTest, HashCheck } = body;
+  const input = `${SiteCode}${Amount}${Status}${TransactionReference}${IsTest}${process.env.OZOW_PRIVATE_KEY}`;
+  const hash = crypto.createHash('sha512').update(input.toLowerCase()).digest('hex');
+  return hash === HashCheck?.toLowerCase();
+}
+
+router.post('/ozow', async (req, res) => {
+  if (!verifyOzowHash(req.body)) {
+    logger.warn('Ozow webhook: invalid hash', req.body);
+    return res.status(400).send('Invalid hash');
+  }
+  res.status(200).send('OK');
+  // ... safe to process
+});</pre>
+        <div class="finding-file">backend/src/routes/webhooks.js · line 38</div>
+      </div>
+
+      <div class="finding critical">
+        <span class="finding-badge badge-critical">Critical — SEC-02</span>
+        <div class="finding-title">Fuel Voucher Ownership Not Validated on Unlock</div>
+        <p>The <code>POST /vouchers/:id/unlock</code> route fetches the voucher by ID but never checks that the requesting user owns it. Any authenticated user can unlock any other user's voucher if they know or can guess the UUID.</p>
+<pre class="bad">// Current — fetches by ID only
+const result = await db.query(
+  'SELECT * FROM fuel_vouchers WHERE id = $1', [voucherId]);</pre>
+<pre class="good">// Fix — join through driver profile to enforce ownership
+const result = await db.query(`
+  SELECT fv.* FROM fuel_vouchers fv
+  JOIN easyfuel_drivers ed ON ed.id = fv.driver_id
+  WHERE fv.id = $1 AND ed.user_id = $2
+`, [voucherId, req.user.id]);</pre>
+        <div class="finding-file">backend/src/routes/easyfuel.js · POST /vouchers/:id/unlock</div>
+      </div>
+
+      <div class="finding critical">
+        <span class="finding-badge badge-critical">Critical — SEC-03</span>
+        <div class="finding-title">User-Controlled clip_percent in SafeBet Deposit</div>
+        <p>The SafeBet deposit endpoint accepts <code>bet_savings_pct</code> from the user request body and validates it only as a float between 7 and 10. However, this value is stored and used directly in financial calculations. A malformed client could send a value like <code>7.999...</code> that passes validation but produces unexpected clip amounts. More concerning: the business documentation states the clip rate is decided by the platform (7–10% based on user profile), not user-selectable. This should be a server-determined value, not a client input.</p>
+        <div class="finding-file">backend/src/routes/safebet.js · POST /deposit · line 28</div>
+      </div>
+
+      <div class="finding critical">
+        <span class="finding-badge badge-critical">Critical — SEC-04</span>
+        <div class="finding-title">SSH Keys in Version-Controlled Files</div>
+        <p>Two public SSH keys (<code>id_rsa.pub</code>, <code>id_rsa_1764457734.pub</code>) are included in the project repository. While these are public keys (not private), their presence in a shared repo reveals the key fingerprints used for server access, and the accompanying private keys may exist in nearby directories. More critically, this pattern suggests the developer habit of keeping SSH material near project files — if a private key ever lands in the repo it would be catastrophic. Move all SSH key management to a dedicated secrets store (AWS Secrets Manager / SSM Parameter Store) and add <code>*.pem *.key id_rsa*</code> to <code>.gitignore</code>.</p>
+        <div class="finding-file">id_rsa (1).pub · id_rsa.1764457734 (1).pub</div>
+      </div>
+
+      <h3>Additional Security Notes</h3>
+
+      <div class="finding warning">
+        <span class="finding-badge badge-warning">Warning — SEC-05</span>
+        <div class="finding-title">Geo-Lock Accepts Client-Provided Coordinates Without Verification</div>
+        <p>The geo-lock check in <code>/vouchers/:id/unlock</code> uses <code>user_lat</code> and <code>user_lng</code> from the request body without any server-side verification. A determined user can trivially spoof their location by sending the station's coordinates directly. Consider requiring a signed GPS attestation from the mobile SDK (e.g., using device-signed location payloads from Android SafetyNet / iOS DeviceCheck), or combining GPS with network IP geolocation as a secondary signal.</p>
+      </div>
+
+      <div class="finding warning">
+        <span class="finding-badge badge-warning">Warning — SEC-06</span>
+        <div class="finding-title">PayFast ITN: Respond 200 Before Signature Verification</div>
+        <p>The PayFast webhook handler sends <code>res.status(200).send('OK')</code> before verifying the PayFast signature — this is actually intentional per PayFast's requirements (they require an immediate 200 before processing). However the code then performs the signature check and silently returns without logging if it fails. Failed signature checks should be logged with full payload for fraud investigation.</p>
+        <div class="finding-file">backend/src/routes/webhooks.js · POST /payfast</div>
+      </div>
+    </section>
+
+    <!-- FINANCIAL LOGIC -->
+    <section class="section" id="financial">
+      <div class="section-header">
+        <span class="section-number">04</span>
+        <h2>Financial Logic — Bugs &amp; Inconsistencies</h2>
+      </div>
+
+      <div class="finding critical">
+        <span class="finding-badge badge-critical">Bug — FIN-01</span>
+        <div class="finding-title">FuelFlex Business Logic Hardcoded, Not Price-Fed</div>
+        <p>The FuelFlex <code>/fuelflex/apply</code> endpoint hardcodes <code>totalTankValueCents = 120000</code> (R1,200) as a comment says <em>"For demo: use R1,200 as full tank example"</em>. In production this would issue contracts at a static price regardless of the live fuel price, meaning users sign up for R1,200 during an R1,400 fuel market or overpay during a R1,000 market. The system prompt in <code>brain.ts</code> and the engineering spec both describe dynamic pricing from a fuel price API. This needs to be wired up before launch.</p>
+<pre class="bad">// Hardcoded demo value — will cause financial errors in production
+const totalTankValueCents = 120000; // R1,200
+const depositCents = Math.round(totalTankValueCents / 3); // R400</pre>
+<pre class="good">// Correct: pull from fuel price API + use actual tank size from driver profile
+const driver = driverResult.rows[0];
+const fuelPrice = await getFuelPricePerLitre(station.fuel_type, fuel_type);
+const totalTankValueCents = Math.round(fuelPrice * driver.tank_size_litres * 100);
+const depositCents = Math.round(totalTankValueCents / 3);</pre>
+        <div class="finding-file">backend/src/routes/easyfuel.js · POST /fuelflex/apply</div>
+      </div>
+
+      <div class="finding critical">
+        <span class="finding-badge badge-critical">Bug — FIN-02</span>
+        <div class="finding-title">USDC Rate Hardcoded in SafeBet Brain Calculator</div>
+        <p>The <code>computeSafeBetClip()</code> method in <code>brain.ts</code> uses a hardcoded exchange rate of <code>18.5</code> ZAR/USD to estimate USDC acquired. The VALR service correctly fetches live rates via <code>getZARUSDCRate()</code>, but the Brain's calculator — which is used for user-facing financial projections — will show a stale rate. If ZAR weakens significantly (e.g. to 19.5) the brain shows users an overstated USDC estimate.</p>
+<pre class="bad">// brain.ts — hardcoded rate
+const usdcEstimate = Math.round((clip / 18.5) * 100) / 100;</pre>
+<pre class="good">// Pass the live rate from VALR into the brain calculation
+const { bid } = await valrService.getZARUSDCRate();
+const usdcEstimate = Math.round((clip / bid) * 100) / 100;</pre>
+        <div class="finding-file">ai-orchestrator/brain.ts · computeSafeBetClip()</div>
+      </div>
+
+      <div class="finding critical">
+        <span class="finding-badge badge-critical">Bug — FIN-03</span>
+        <div class="finding-title">EFT Fee Calculation Applied Twice</div>
+        <p>In the EFT disbursement worker, the platform fee is calculated and then applied inconsistently. The wallet is debited by <code>amount_cents + feeCents</code>, but the ledger entry also records <code>amount_cents + feeCents</code> as the debit amount. The disbursement sent via PayFast is <code>netCents = amount_cents - feeCents</code>. This means the user is debited <em>amount + fee</em> but only receives <em>amount - fee</em> — the user's account is charged the fee twice (once as a deduction from the disbursed amount, once as an explicit debit).</p>
+<pre class="bad">// worker.js — double-charging the fee
+const feeCents = Math.round(amount_cents * 0.01); // 1%
+const netCents = amount_cents - feeCents;
+// Wallet debit: amount_cents + feeCents  (user pays full amount + fee)
+// PayFast disburse: netCents = amount - fee  (user receives less than they intended)
+// Net effect: user is short by 2x the fee</pre>
+<pre class="good">// Correct: debit only amount_cents from wallet; fee comes out of the disbursement
+const feeCents = Math.round(amount_cents * 0.01);
+const netCents = amount_cents - feeCents;
+// Wallet debit: amount_cents only
+// PayFast disburse: netCents
+// Separately credit feeCents to a platform fee ledger account</pre>
+        <div class="finding-file">backend/src/jobs/worker.js · eftWorker</div>
+      </div>
+
+      <h3>Financial Logic That's Correct</h3>
+      <ul class="checklist">
+        <li class="check-pass"><strong>GreenWallet clip math:</strong> <code>0.001 × transaction</code> is correctly rounded to 2dp</li>
+        <li class="check-pass"><strong>SafeBet unlock dates:</strong> principal at +3 months, gains at +12 months — correct and stored as date strings</li>
+        <li class="check-pass"><strong>FuelFlex 1/3 subsidy split:</strong> documented logic matches <code>computeFuelFlex()</code> implementation</li>
+        <li class="check-pass"><strong>Wallet balance constraint:</strong> <code>CHECK (balance_cents &gt;= 0)</code> prevents overdraft at DB level</li>
+        <li class="check-pass"><strong>All monetary values as BIGINT cents:</strong> no floating-point money anywhere in the schema</li>
+        <li class="check-pass"><strong>SafeBet minimum deposit:</strong> 5000 cents (R50) minimum validated at route level</li>
+      </ul>
+    </section>
+
+    <!-- COMPLIANCE -->
+    <section class="section" id="compliance">
+      <div class="section-header">
+        <span class="section-number">05</span>
+        <h2>Compliance — FICA / AML / POPIA / PCI</h2>
+      </div>
+
+      <div class="finding warning">
+        <span class="finding-badge badge-warning">Gap — COMP-01</span>
+        <div class="finding-title">No SAR Filing Workflow</div>
+        <p>The <code>compliance_flags</code> table has a <code>sar_filed</code> boolean, and the Brain correctly identifies AML patterns (structuring, high velocity, geo mismatch). However, there is no implemented route, cron job, or dashboard for compliance officers to review flagged users and file a Suspicious Activity Report with the FIC. The flag creation logic exists; the downstream workflow does not. For FICA compliance, a human-in-the-loop SAR review process must be built before live transactions.</p>
+      </div>
+
+      <div class="finding warning">
+        <span class="finding-badge badge-warning">Gap — COMP-02</span>
+        <div class="finding-title">KYC Tier 2 Not Defined in Schema</div>
+        <p>The <code>requireKYC(2)</code> gate is used in the FuelFlex apply route (which requires a TransUnion credit check), but the schema's <code>users</code> table has no <code>kyc_tier</code> column in the reviewed version. The auth middleware does reference <code>req.user.kyc_tier</code> suggesting it's in the <code>ecosystem_sync</code> or <code>users</code> table, but the schema <code>CREATE TABLE users</code> shown above doesn't define it. Verify the deployed schema matches the middleware expectations — a mismatch means KYC tier gates silently fail (tier evaluates to <code>undefined</code> which is <code>&lt; 2</code>, correctly blocking, but for the wrong reason).</p>
+        <div class="finding-file">backend/src/middleware/auth.js · infra/postgres/schema.sql</div>
+      </div>
+
+      <div class="finding warning">
+        <span class="finding-badge badge-warning">Gap — COMP-03</span>
+        <div class="finding-title">POPIA: AI Brain Receives Non-Redacted User Data</div>
+        <p>The AI Brain's <code>analyseUserTelemetry()</code> method passes a <code>UserFinancialProfile</code> and raw telemetry events to Claude. The system prompt mentions <em>"PII redacted from Brain analysis prompts"</em> but the implementation passes <code>user_id</code>, transaction amounts, merchant IDs, and geo data directly. For POPIA compliance, the Brain should receive a pseudonymised profile (hashed user ID, no direct identifiers). Additionally, the Anthropic API call sends this data to a US-based API — verify your Anthropic data processing agreement covers South African POPIA cross-border data transfer requirements.</p>
+      </div>
+
+      <div class="finding info">
+        <span class="finding-badge badge-info">Note — COMP-04</span>
+        <div class="finding-title">SafeBet FSCA Classification Risk</div>
+        <p>SafeBet clips a percentage of gambling deposits and converts to USDC, promising yield ("trading gains" at 12-month unlock). This feature profile — collecting client money, promising returns, converting to crypto — may require FSCA registration as a Collective Investment Scheme or Financial Services Provider. The engineering implementation is solid, but the product should be reviewed by a South African financial law specialist before launch to confirm it falls outside CIS/FSP licensing requirements or to obtain the appropriate licence.</p>
+      </div>
+
+      <h3>Compliance Checklist</h3>
+      <ul class="checklist">
+        <li class="check-pass"><strong>FICA KYC gate:</strong> <code>requireKYC()</code> middleware blocks transactions for unverified users</li>
+        <li class="check-pass"><strong>Smile ID integration:</strong> biometric + document verification service correctly wired</li>
+        <li class="check-pass"><strong>PCI-DSS card data:</strong> no raw card numbers in any table — tokenised by gateway</li>
+        <li class="check-pass"><strong>Data residency:</strong> RDS in af-south-1, Supabase configured for SA region</li>
+        <li class="check-pass"><strong>Row-level security:</strong> Supabase RLS policies noted in architecture</li>
+        <li class="check-fail"><strong>SAR filing workflow:</strong> flags created but no review/filing process</li>
+        <li class="check-fail"><strong>PII in AI prompts:</strong> user data sent to Anthropic without pseudonymisation</li>
+        <li class="check-warn"><strong>FSCA product classification:</strong> SafeBet yield product needs legal review</li>
+        <li class="check-warn"><strong>Kyc_tier schema gap:</strong> verify <code>users.kyc_tier</code> column exists in deployed schema</li>
+        <li class="check-na"><strong>Annual POPIA compliance audit:</strong> process not defined (operational, not code)</li>
+      </ul>
+    </section>
+
+    <!-- AI BRAIN -->
+    <section class="section" id="ai-brain">
+      <div class="section-header">
+        <span class="section-number">06</span>
+        <h2>AI Brain / Orchestrator</h2>
+      </div>
+
+      <p>The AI Brain is one of the most thoughtfully implemented parts of the platform. Two separate AI layers exist: <code>brain.ts</code> (TypeScript class, Anthropic SDK) and <code>ai-orchestrator.js</code> (axios-based, three specialist agents). Both are well-structured and serve different purposes.</p>
+
+      <div class="finding good">
+        <span class="finding-badge badge-good">Good</span>
+        <div class="finding-title">ARIA MMP.ai Agent is Production-Quality</div>
+        <p>The ARIA sourcing agent in <code>ai-orchestrator.js</code> has a clear, constrained system prompt with specific freight cost formulas (sea freight base $120 + $0.8/kg, air freight $280 + $4.5/kg), structured JSON output, and sensible fallback handling. The prompt engineering is domain-specific and unlikely to hallucinate outside its constrained output format.</p>
+      </div>
+
+      <div class="finding good">
+        <span class="finding-badge badge-good">Good</span>
+        <div class="finding-title">Brain Action Types Are Well-Designed</div>
+        <p>The 8 action types (<code>upsell_offer</code>, <code>fraud_alert</code>, <code>green_clip</code>, <code>safebet_trigger</code>, <code>notification_sms</code>, <code>compliance_flag</code>, <code>fuelflex_offer</code>, <code>mmpai_lead</code>) give the AI a constrained vocabulary of real-world effects. The system prompt correctly enumerates FICA/POPIA/AML/SARB constraints the Brain must observe.</p>
+      </div>
+
+      <div class="finding warning">
+        <span class="finding-badge badge-warning">Warning</span>
+        <div class="finding-title">Brain Actions Are Recommendations, Not Executions</div>
+        <p>The Brain returns recommended actions but there is no implemented action executor — nothing actually fires Clickatell SMS, creates compliance flags in DB, or triggers GreenWallet clips based on Brain output. The <code>brain_actions</code> table exists in the schema but the API routes (<code>/api/brain/analyse</code>) store the analysis but don't execute the actions. Build an action execution engine that maps Brain output to real side effects, with a human-review gate for <code>fraud_alert</code> and <code>compliance_flag</code> actions.</p>
+      </div>
+
+      <div class="finding warning">
+        <span class="finding-badge badge-warning">Warning</span>
+        <div class="finding-title">RAG Status Forecast Never Materialises in UI</div>
+        <p>The <code>updateSystemRAGStatus()</code> function in <code>ai-orchestrator.js</code> is a well-designed 7–10 day forecast, but there is no cron job wiring it to run every 6 hours (as intended), and no operator dashboard to surface the GREEN/AMBER/RED status. The <code>ai_events</code> table receives the output but nobody reads it. Wire this to a cron job and surface in the admin dashboard.</p>
+      </div>
+
+      <div class="finding info">
+        <span class="finding-badge badge-info">Note</span>
+        <div class="finding-title">Multi-Turn Context Has No Session Isolation</div>
+        <p>The <code>MoveEasyBrain</code> class maintains <code>conversationHistory</code> as an instance variable. In a serverless or multi-process environment, each PM2 process will have an independent Brain instance with separate history. Two operator queries from the same user may hit different processes and lose context. For true multi-turn consistency, store conversation history in Redis keyed by session ID and rehydrate on each call.</p>
+        <div class="finding-file">ai-orchestrator/brain.ts · operatorQuery()</div>
+      </div>
+
+      <h3>Prompt Engineering Quality</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Prompt / Agent</th><th>Structure</th><th>Output Constraint</th><th>Compliance Context</th><th>Rating</th></tr></thead>
+          <tbody>
+            <tr><td>Brain system prompt</td><td>Detailed, 5-product context</td><td>JSON schema specified</td><td>FICA/POPIA/AML/SARB listed</td><td><span class="pill pill-green">Excellent</span></td></tr>
+            <tr><td>ARIA sourcing agent</td><td>Clear, freight formulas embedded</td><td>JSON only, fields specified</td><td>N/A (trade)</td><td><span class="pill pill-green">Excellent</span></td></tr>
+            <tr><td>RAG forecaster</td><td>Minimal context</td><td>JSON, RAG colour only</td><td>N/A</td><td><span class="pill pill-blue">Adequate</span></td></tr>
+            <tr><td>Operator console</td><td>Brief, no product context</td><td>Free text</td><td>None</td><td><span class="pill pill-amber">Weak</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PAYMENT RAILS -->
+    <section class="section" id="payment-rails">
+      <div class="section-header">
+        <span class="section-number">07</span>
+        <h2>Payment Rails</h2>
+      </div>
+
+      <div class="finding good">
+        <span class="finding-badge badge-good">Good</span>
+        <div class="finding-title">Ozow URL Construction Is Correct</div>
+        <p>The Ozow payment URL is constructed correctly with all required fields: <code>SiteCode</code>, <code>CurrencyCode</code>, <code>Amount</code>, <code>TransactionReference</code>, <code>BankReference</code>, <code>SuccessUrl</code>, <code>CancelUrl</code>, <code>ErrorUrl</code>, <code>NotifyUrl</code>. The hash generation is missing (Ozow requires an HMAC-SHA512 hash of the parameters), but the parameter structure is correct.</p>
+      </div>
+
+      <div class="finding warning">
+        <span class="finding-badge badge-warning">Warning</span>
+        <div class="finding-title">Ozow Payment URL Missing Required Hash Parameter</div>
+        <p>Ozow requires a <code>Hash</code> or <code>HashCheck</code> field in the payment URL calculated from all parameters + private key via SHA-512. The current implementation constructs the URL without this field. Ozow will reject the payment link with an invalid hash error.</p>
+<pre class="good">// Add hash generation before constructing URL
+const sortedParams = Object.fromEntries(
+  Object.entries(ozowParams).sort()
+);
+const hashInput = Object.values(sortedParams).join('').toLowerCase()
+  + process.env.OZOW_PRIVATE_KEY.toLowerCase();
+const hash = crypto.createHash('sha512').update(hashInput).digest('hex');
+ozowParams.Hash = hash;</pre>
+        <div class="finding-file">backend/src/routes/safebet.js · POST /deposit</div>
+      </div>
+
+      <div class="finding info">
+        <span class="finding-badge badge-info">Note</span>
+        <div class="finding-title">Purple Owl EBPP Contact Details Are Personal</div>
+        <p>The <code>sendEBPP()</code> function hardcodes a personal email (<code>yangaskaal2@gmail.com</code>) and phone number as the merchant contact. These should be environment variables pointing to an official support address before production.</p>
+        <div class="finding-file">backend/src/services/purple-owl.js · sendEBPP()</div>
+      </div>
+
+      <div class="finding info">
+        <span class="finding-badge badge-info">Note</span>
+        <div class="finding-title">Nedbank Card Acquiring Not Yet Implemented</div>
+        <p>The Nedbank payment rail (Visa, MC, Amex SafeKey, POS, PocketPOS, QR) is documented and referenced throughout the codebase but no <code>nedbank.js</code> service or card-acquiring implementation exists in the uploaded build. The Hono <code>api.ts</code> has stubs. This is fine if Nedbank integration is Phase 2, but the engineering doc and UI imply it's current.</p>
+      </div>
+    </section>
+
+    <!-- EASYFUEL -->
+    <section class="section" id="easyfuel">
+      <div class="section-header">
+        <span class="section-number">08</span>
+        <h2>EasyFuel + FuelFlex</h2>
+      </div>
+
+      <p>EasyFuel is the most complete and well-implemented product in the build. The geo-lock mechanism, HMAC-signed QR generation, and driver profile structure are all solid.</p>
+
+      <ul class="checklist">
+        <li class="check-pass">Haversine distance correctly implemented in JavaScript (matches PostGIS results within tolerance)</li>
+        <li class="check-pass">HMAC-signed QR payload with 4-hour TTL — prevents voucher screenshot sharing</li>
+        <li class="check-pass">Voucher code generated with <code>crypto.randomBytes(8)</code> — cryptographically secure</li>
+        <li class="check-pass">Station nearest-neighbour query uses SQL Haversine (works without PostGIS extension if needed)</li>
+        <li class="check-pass">AI Fuel Optimizer triggered asynchronously after unlock (<code>.catch()</code> prevents blocking the response)</li>
+        <li class="check-fail">Voucher ownership not checked on unlock (SEC-02 above)</li>
+        <li class="check-fail">FuelFlex hardcodes R1,200 tank price (FIN-01 above)</li>
+        <li class="check-warn">Geo-lock uses client-provided GPS coordinates (SEC-05 above)</li>
+        <li class="check-warn">No rate limit on <code>/vouchers/:id/unlock</code> — brute-forcing voucher IDs (UUIDs) is infeasible but the endpoint should still be rate-limited per user</li>
+        <li class="check-warn">FuelFlex 3.5% service fee (<code>serviceFeeCents = Math.round(totalTankValueCents * 0.035)</code>) is not shown to the user in a FSCA-compliant cost disclosure</li>
+      </ul>
+    </section>
+
+    <!-- SAFEBET -->
+    <section class="section" id="safebet">
+      <div class="section-header">
+        <span class="section-number">09</span>
+        <h2>SafeBet</h2>
+      </div>
+
+      <p>SafeBet has the most complex payment pipeline and is generally well-implemented. The idempotency key, BullMQ async processing, and 3-month/12-month unlock logic are correctly built.</p>
+
+      <ul class="checklist">
+        <li class="check-pass">Idempotency key check prevents duplicate deposits</li>
+        <li class="check-pass">Batch created in <code>'converting'</code> state before payment — prevents claiming funds before Ozow confirms</li>
+        <li class="check-pass">Unlock dates calculated at deposit time and stored — correct</li>
+        <li class="check-pass">Withdrawal properly blocked with clear error messages until unlock date</li>
+        <li class="check-pass">VALR integration for USDC conversion is correctly async (queued not inline)</li>
+        <li class="check-pass">Portfolio view correctly fetches live USDC rate from VALR with fallback</li>
+        <li class="check-fail">Ozow hash missing from payment URL (PAY-02 above)</li>
+        <li class="check-fail">User controls clip percentage — should be platform-determined (SEC-03 above)</li>
+        <li class="check-warn">No maximum deposit cap — a user depositing R10M would trigger a large automatic USDC buy. Add a daily/monthly deposit cap and an AML review trigger above a threshold (e.g. R50,000/day)</li>
+        <li class="check-warn">The Ozow webhook (webhooks.js) updates <code>contribution_batches.status = 'active'</code> at webhook time, but the BullMQ worker also sets status to <code>'active'</code> after VALR conversion. These race and can conflict if the worker processes before the webhook status update completes.</li>
+      </ul>
+    </section>
+
+    <!-- WORKERS -->
+    <section class="section" id="workers">
+      <div class="section-header">
+        <span class="section-number">10</span>
+        <h2>Async Workers (BullMQ)</h2>
+      </div>
+
+      <div class="finding good">
+        <span class="finding-badge badge-good">Good</span>
+        <div class="finding-title">Idempotent Worker Pattern</div>
+        <p>The deposit worker checks <code>if (batch.status === 'active') return;</code> before processing — this correctly makes the worker idempotent so that BullMQ retries don't double-process a VALR conversion. This is the right pattern for financial workers.</p>
+      </div>
+
+      <div class="finding good">
+        <span class="finding-badge badge-good">Good</span>
+        <div class="finding-title">FOR UPDATE Locking</div>
+        <p>Financial workers use <code>SELECT ... FOR UPDATE</code> to lock rows during processing. This prevents concurrent workers from processing the same batch simultaneously — correct use of PostgreSQL advisory locking within a transaction.</p>
+      </div>
+
+      <div class="finding warning">
+        <span class="finding-badge badge-warning">Warning</span>
+        <div class="finding-title">Worker Queue Name Mismatch</div>
+        <p>The SafeBet webhook queues a job to <code>'deposit-split'</code> with the payload key <code>batch_id</code>. The worker listens on <code>'deposit-split'</code> and reads <code>job.data.batch_id</code>. However, the <code>depositQueue</code> in <code>safebet.js</code> is created as <code>new Queue('deposit-split')</code> but withdrawal jobs are added with <code>depositQueue.add('withdrawal', ...)</code>. The worker doesn't have a processor for <code>'withdrawal'</code> job names — these jobs will queue and never process.</p>
+        <div class="finding-file">backend/src/routes/safebet.js · POST /withdraw · backend/src/jobs/worker.js</div>
+      </div>
+
+      <div class="finding info">
+        <span class="finding-badge badge-info">Note</span>
+        <div class="finding-title">No Dead Letter Queue or Job Monitoring</div>
+        <p>Failed jobs (<code>worker.on('failed')</code>) are only logged to console. In production, failed financial jobs need a dead letter queue with alerting, and a manual review process. Consider adding Bull Dashboard or Grafana + BullMQ metrics for operational visibility into job queues.</p>
+      </div>
+    </section>
+
+    <!-- DATABASE -->
+    <section class="section" id="database">
+      <div class="section-header">
+        <span class="section-number">11</span>
+        <h2>Database / Schema</h2>
+      </div>
+
+      <ul class="checklist">
+        <li class="check-pass">UUID primary keys throughout (no sequential IDs that enumerate users)</li>
+        <li class="check-pass">BIGINT cents for all monetary amounts — no FLOAT/DECIMAL money</li>
+        <li class="check-pass">Phone format CHECK constraint (<code>+[10-15 digits]</code> E.164)</li>
+        <li class="check-pass">PostGIS enabled for merchant geo-point (EasyFuel geo-lock backup)</li>
+        <li class="check-pass"><code>wallet_transactions</code> is correctly immutable (INSERT only, no UPDATE)</li>
+        <li class="check-pass">KYC records deduplicated per user/provider with UNIQUE constraint</li>
+        <li class="check-pass">DB connection pool with <code>connectionTimeoutMillis: 5000</code> prevents pile-up</li>
+        <li class="check-pass">SSL enforcement in production via <code>ssl.rejectUnauthorized: true</code></li>
+        <li class="check-warn">Two schema files exist: <code>infra/postgres/schema.sql</code> and <code>database/schema.sql</code> — verify they are in sync</li>
+        <li class="check-warn">No migration framework (Flyway/db-migrate/Knex) — manual schema changes in production are risky</li>
+        <li class="check-warn"><code>DB_SSL_CERT</code> is required for RDS SSL but is not in <code>.env.example</code> — easy to miss during deployment</li>
+        <li class="check-na">Read replicas not configured — add for Brain telemetry queries to avoid read load on primary</li>
+      </ul>
+    </section>
+
+    <!-- INFRASTRUCTURE -->
+    <section class="section" id="infra">
+      <div class="section-header">
+        <span class="section-number">12</span>
+        <h2>Infrastructure</h2>
+      </div>
+
+      <ul class="checklist">
+        <li class="check-pass">TLS 1.2/1.3 only, HSTS with preload, OCSP stapling in Nginx</li>
+        <li class="check-pass">Route-level rate limiting: 10/min auth, 30/min API, 60/min webhooks</li>
+        <li class="check-pass">Server tokens hidden (<code>server_tokens off</code>)</li>
+        <li class="check-pass">PM2 multi-process management with separate API and Brain processes</li>
+        <li class="check-pass">90-second Brain proxy timeout accommodates Claude API latency</li>
+        <li class="check-pass">EC2 Ubuntu 22.04 LTS — long-term supported, appropriate for production</li>
+        <li class="check-pass">Certbot auto-renewal configured</li>
+        <li class="check-warn">Single EC2 instance — no Auto Scaling Group. A single instance failure means full platform outage. Consider an ALB + ASG or at minimum a hot standby.</li>
+        <li class="check-warn">Webhook endpoints should whitelist Nedbank/Ozow/PayFast IP ranges at Nginx level (in addition to signature verification)</li>
+        <li class="check-warn">No CloudWatch/APM monitoring configured in setup.sh — add before launch</li>
+        <li class="check-na">Redis on localhost — single node. For production resilience, use ElastiCache cluster with replication</li>
+      </ul>
+    </section>
+
+    <!-- PRIORITIES -->
+    <section class="section" id="priorities">
+      <div class="section-header">
+        <span class="section-number">13</span>
+        <h2>Prioritised Action Plan</h2>
+      </div>
+
+      <div class="priority-grid">
+        <div class="priority-block">
+          <div class="priority-header ph-red">🔴 Pre-Launch Blockers</div>
+          <ul class="priority-items">
+            <li>SEC-01 — Ozow webhook signature verification</li>
+            <li>SEC-02 — Voucher ownership check on unlock</li>
+            <li>FIN-01 — Wire live fuel price API into FuelFlex</li>
+            <li>FIN-03 — Fix EFT fee double-charge in worker</li>
+            <li>PAY-02 — Add Ozow hash to payment URL</li>
+            <li>WRK-01 — Fix withdrawal job never processing</li>
+          </ul>
+        </div>
+        <div class="priority-block">
+          <div class="priority-header ph-amber">🟠 Before First 100 Users</div>
+          <ul class="priority-items">
+            <li>SEC-03 — Move clip % to server-determined value</li>
+            <li>SEC-04 — Remove SSH keys from repo, add to .gitignore</li>
+            <li>FIN-02 — Pass live VALR rate to Brain calculator</li>
+            <li>COMP-03 — Pseudonymise user data before Claude API calls</li>
+            <li>Redis persistence (appendonly yes or ElastiCache)</li>
+            <li>Add <code>DB_SSL_CERT</code> to .env.example + deployment docs</li>
+          </ul>
+        </div>
+        <div class="priority-block">
+          <div class="priority-header ph-gold">🟡 Before Scale</div>
+          <ul class="priority-items">
+            <li>COMP-01 — Build SAR filing workflow for compliance team</li>
+            <li>COMP-04 — FSCA legal review of SafeBet yield product</li>
+            <li>Brain action executor (fire real side-effects from AI output)</li>
+            <li>RAG status cron job + operator dashboard</li>
+            <li>Brain conversation history in Redis (multi-process sessions)</li>
+            <li>Dead letter queue + BullMQ monitoring dashboard</li>
+          </ul>
+        </div>
+        <div class="priority-block">
+          <div class="priority-header ph-green">🟢 Good Practices</div>
+          <ul class="priority-items">
+            <li>Adopt single canonical API layer (Express or Hono)</li>
+            <li>Add db-migrate or Flyway for schema versioning</li>
+            <li>Add ALB + Auto Scaling Group (single-instance risk)</li>
+            <li>Webhook IP allowlisting at Nginx level</li>
+            <li>CloudWatch + Grafana monitoring</li>
+            <li>Strengthen operator console system prompt</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENV VARIABLES -->
+    <section class="section" id="env">
+      <div class="section-header">
+        <span class="section-number">14</span>
+        <h2>Environment / Config Notes</h2>
+      </div>
+
+      <p>The <code>.env.example</code> is comprehensive and well-documented. A few additions are needed:</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Variable</th><th>Status</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td>DB_SSL_CERT</td><td><span class="pill pill-red">Missing</span></td><td>Required for RDS SSL — add to .env.example</td></tr>
+            <tr><td>SMILE_ID_PARTNER_ID</td><td><span class="pill pill-green">Present</span></td><td>Separate from API key — correct</td></tr>
+            <tr><td>BACKEND_URL</td><td><span class="pill pill-amber">Implicit</span></td><td>Used in safebet.js for Ozow NotifyUrl — add explicitly</td></tr>
+            <tr><td>FUEL_PRICE_API_KEY</td><td><span class="pill pill-green">Present</span></td><td>Needs to be wired up to replace hardcoded value</td></tr>
+            <tr><td>ANTHROPIC_API_KEY</td><td><span class="pill pill-green">Present</span></td><td>Used by both brain.ts and ai-orchestrator.js</td></tr>
+            <tr><td>REDIS_URL</td><td><span class="pill pill-green">Present</span></td><td>Default localhost fine for dev; use ElastiCache URL in prod</td></tr>
+            <tr><td>OZOW_PRIVATE_KEY</td><td><span class="pill pill-green">Present</span></td><td>Needed for both URL hash generation AND webhook verification</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MISSING PIECES -->
+    <section class="section" id="missing">
+      <div class="section-header">
+        <span class="section-number">15</span>
+        <h2>Missing Pieces</h2>
+      </div>
+
+      <p>The following are mentioned in documentation or referenced in code but not implemented in the uploaded build:</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Feature</th><th>Where Referenced</th><th>Priority</th></tr></thead>
+          <tbody>
+            <tr><td>Nedbank card acquiring service</td><td>Engineering doc, Hono API stubs</td><td><span class="pill pill-red">High</span></td></tr>
+            <tr><td>EasyTransect mobile money aggregation (FNB eWallet, MTN MoMo, Absa CashSend)</td><td>Engineering doc, product overview</td><td><span class="pill pill-red">High</span></td></tr>
+            <tr><td>Brain action executor</td><td>brain_actions table, action types defined</td><td><span class="pill pill-amber">Medium</span></td></tr>
+            <tr><td>Admin / operator dashboard routes</td><td>adminRoutes imported in index.js but file not in zip</td><td><span class="pill pill-amber">Medium</span></td></tr>
+            <tr><td>orchestratorRoutes</td><td>Imported in index.js but not in zip</td><td><span class="pill pill-amber">Medium</span></td></tr>
+            <tr><td>mmpaiRoutes</td><td>Imported in index.js but not in zip</td><td><span class="pill pill-amber">Medium</span></td></tr>
+            <tr><td>greenwalletRoutes</td><td>Imported in index.js but not in zip</td><td><span class="pill pill-amber">Medium</span></td></tr>
+            <tr><td>EBPP digital invoicing via Clickatell</td><td>Engineering doc, EBPP endpoint defined</td><td><span class="pill pill-blue">Low</span></td></tr>
+            <tr><td>TransUnion credit check for FuelFlex Tier 2</td><td>.env.example has keys, code checks <code>bnpl_approved</code></td><td><span class="pill pill-amber">Medium</span></td></tr>
+            <tr><td>React Native mobile apps</td><td>Architecture doc</td><td><span class="pill pill-blue">Separate repo</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <div class="callout-label">Final Note</div>
+        <h3>This is a strong foundation for a serious platform</h3>
+        <p>The architectural decisions are sound, the financial data model is correct, and the AI integration is genuinely thoughtful. The issues found are typical of a pre-production build — not signs of flawed design. Fix the 6 pre-launch blockers and this platform is ready for a controlled beta.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+</body>
+</html>
