@@ -2,10 +2,10 @@
   "name": "moveeasy-backend",
   "version": "2026.1.0",
   "description": "MoveEasy Core API — Node.js/Express Backend",
-  "main": "src/index.js",
+  "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js",
+    "dev": "nodemon index.js",
+    "start": "node index.js",
     "test": "jest --testEnvironment node",
     "worker": "node src/jobs/worker.js"
   },

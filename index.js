@@ -163,6 +163,19 @@ app.get('/api/v1/ecosystem/status', async (req, res) => {
 });
 
 // ================================================================
+// Static Frontend Serving (for preview/development)
+// ================================================================
+app.use(express.static(__dirname, {
+  index: false,
+  extensions: ['html', 'js', 'css', 'json']
+}));
+
+// Serve index.html for SPA routing (root path)
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
+
+// ================================================================
 // Global Error Handler
 // ================================================================
 app.use((err, req, res, next) => {
@@ -179,7 +192,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
+// 404 handler (after static/SPA routes)
 app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found', path: req.url });
 });
