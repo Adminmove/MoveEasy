@@ -1,0 +1,39 @@
+# Secrets — NEVER commit
+.env
+.env.local
+.env.production
+.env.staging
+*.env
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Logs
+logs/*.log
+*.log
+npm-debug.log*
+
+# Runtime
+pids/
+*.pid
+*.pid.lock
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# TypeScript
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+.nyc_output/
